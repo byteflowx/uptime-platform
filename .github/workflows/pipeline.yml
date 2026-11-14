@@ -44,12 +44,30 @@ jobs:
   build:
     needs: check
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: docker build -t uptime-app app
+      - run: docker build -t uptime-app --label org.opencontainers.image.source=https://github.com/${{ github.repository }} app
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: uptime-app
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
+      - if: github.event_name == 'push'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=${GITHUB_SHA::7}
+          image=ghcr.io/$GITHUB_REPOSITORY
+          echo "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker tag uptime-app "$image:$tag"
+          docker push "$image:$tag"
+          sed -i "s/^  tag: .*/  tag: $tag/" deploy/chart/values.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "deploy: $tag"
+          git pull --rebase
+          git push

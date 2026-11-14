@@ -21,3 +21,5 @@ Requires Terraform, Helm, kubectl, jq and AWS CLI with the Session Manager plugi
 3. `make deploy` installs Argo CD, which deploys `deploy/chart` from `main`.
 4. `curl http://$(terraform -chdir=infra output -raw node_public_ip)/status`
 5. `make destroy` removes everything.
+
+Every push to `main` publishes the image to GHCR and updates the tag in `deploy/chart/values.yaml`, then Argo CD rolls it out.
