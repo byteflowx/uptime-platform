@@ -1,0 +1,12 @@
+image:
+  repository: ghcr.io/byteflowx/uptime-platform
+  tag: latest
+
+db:
+  host: ""
+  name: uptime
+  user: uptime
+  passwordSecret: uptime-db
+
+api:
+  replicas: 2

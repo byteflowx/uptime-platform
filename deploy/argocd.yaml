@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: uptime
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/byteflowx/uptime-platform.git
+    targetRevision: main
+    path: deploy/chart
+    helm:
+      parameters:
+        - name: db.host
+          value: DB_HOST
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

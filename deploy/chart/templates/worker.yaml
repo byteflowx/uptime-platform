@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          {{- include "uptime.container" . | nindent 10 }}
+          command: [python, -m, uptime.worker]
+          ports:
+            - name: metrics
+              containerPort: 8001

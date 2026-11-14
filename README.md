@@ -14,6 +14,10 @@ curl localhost:8000/status
 
 ## AWS
 
-Requires Terraform and AWS CLI signed in with `aws login`.
+Requires Terraform, Helm, kubectl, jq and AWS CLI with the Session Manager plugin, signed in with `aws login`.
 
-`make infra` creates VPC, EC2 with k3s and RDS. `make destroy` removes everything.
+1. `make infra` creates VPC, EC2 with k3s and RDS.
+2. `make kubeconfig`, then `make tunnel` in a separate terminal.
+3. `make deploy` installs Argo CD, which deploys `deploy/chart` from `main`.
+4. `curl http://$(terraform -chdir=infra output -raw node_public_ip)/status`
+5. `make destroy` removes everything.
