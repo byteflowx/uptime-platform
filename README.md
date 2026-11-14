@@ -18,8 +18,11 @@ Requires Terraform, Helm, kubectl, jq and AWS CLI with the Session Manager plugi
 
 1. `make infra` creates VPC, EC2 with k3s and RDS.
 2. `make kubeconfig`, then `make tunnel` in a separate terminal.
-3. `make deploy` installs Argo CD, which deploys `deploy/chart` from `main`.
+3. `make deploy` installs Prometheus, Grafana and Argo CD, which deploys `deploy/chart` from `main`.
 4. `curl http://$(terraform -chdir=infra output -raw node_public_ip)/status`
-5. `make destroy` removes everything.
+5. `make grafana` prints the login and opens Grafana on <http://localhost:3000>, dashboard "Uptime".
+6. `make destroy` removes everything.
 
 Every push to `main` publishes the image to GHCR and updates the tag in `deploy/chart/values.yaml`, then Argo CD rolls it out.
+
+A site that is down for 2 minutes fires the `SiteDown` alert. Telegram is a stub: set `chat_id` in `deploy/monitoring.yaml` and run `TELEGRAM_BOT_TOKEN=<token> make deploy`.

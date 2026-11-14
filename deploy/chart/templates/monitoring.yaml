@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: worker
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  podMetricsEndpoints:
+    - port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: uptime
+spec:
+  groups:
+    - name: uptime
+      rules:
+        - alert: SiteDown
+          expr: probe_up == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: {{ "{{ $labels.target }} is down" | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uptime-dashboard
+  labels:
+    grafana_dashboard: "1"
+data:
+  uptime.json: |-
+    {{- .Files.Get "dashboards/uptime.json" | nindent 4 }}

@@ -6,7 +6,7 @@ MY_CIDR = $(shell curl -fsS https://checkip.amazonaws.com)/32
 TF = terraform -chdir=infra
 NODE = $(shell $(TF) output -raw node_id)
 
-.PHONY: dev down test lint infra destroy kubeconfig tunnel deploy
+.PHONY: dev down test lint infra destroy kubeconfig tunnel deploy grafana
 
 dev:
 	docker compose up --build --detach --wait
@@ -50,6 +50,12 @@ tunnel:
 		--document-name AWS-StartPortForwardingSession --parameters portNumber=6443,localPortNumber=6443
 
 deploy:
+	kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+	kubectl -n monitoring create secret generic telegram --dry-run=client -o yaml \
+		--from-literal=token="$${TELEGRAM_BOT_TOKEN:-stub}" | kubectl apply -f -
+	helm upgrade --install monitoring kube-prometheus-stack \
+		--repo https://prometheus-community.github.io/helm-charts --version 93.3.0 \
+		--namespace monitoring --wait -f deploy/monitoring.yaml
 	kubectl create secret generic uptime-db --dry-run=client -o yaml --from-literal=password="$$( \
 		aws secretsmanager get-secret-value --secret-id $$($(TF) output -raw db_secret_arn) \
 			--query SecretString --output text | jq -r .password)" | kubectl apply -f -
@@ -57,3 +63,7 @@ deploy:
 		--namespace argocd --create-namespace --wait \
 		--set dex.enabled=false --set notifications.enabled=false
 	sed "s|DB_HOST|$$($(TF) output -raw db_endpoint)|" deploy/argocd.yaml | kubectl apply -f -
+
+grafana:
+	@echo "admin / $$(kubectl -n monitoring get secret monitoring-grafana -o jsonpath='{.data.admin-password}' | base64 -d)"
+	kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80
