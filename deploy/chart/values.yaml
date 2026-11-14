@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/byteflowx/uptime-platform
-  tag: 2bc6ede
+  tag: 6d413ee
 
 db:
   host: ""
