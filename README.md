@@ -11,3 +11,9 @@ curl localhost:8000/status
 ```
 
 `make test`, `make lint`, `make down`.
+
+## AWS
+
+Requires Terraform and AWS CLI signed in with `aws login`.
+
+`make infra` creates VPC, EC2 with k3s and RDS. `make destroy` removes everything.
